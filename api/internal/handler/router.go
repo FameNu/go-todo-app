@@ -14,7 +14,7 @@ import (
 func NewRouter(allowedOrigins string, db *gorm.DB, categories *service.CategoryService, todos *service.TodoService) *fiber.App {
 	app := fiber.New(fiber.Config{AppName: "Clinic Todo API", ErrorHandler: errorHandler})
 	app.Use(logger.New())
-	app.Use(cors.New(cors.Config{AllowOrigins: strings.TrimSpace(allowedOrigins), AllowMethods: "GET,POST,PATCH,DELETE,OPTIONS", AllowHeaders: "Origin,Content-Type,Accept"}))
+	app.Use(cors.New(cors.Config{AllowOrigins: parseAllowedOrigins(allowedOrigins), AllowMethods: "GET,POST,PATCH,DELETE,OPTIONS", AllowHeaders: "Origin,Content-Type,Accept"}))
 	api := app.Group("/api/v1")
 	app.Get("/health", health(db))
 	api.Get("/health", health(db))
@@ -23,9 +23,25 @@ func NewRouter(allowedOrigins string, db *gorm.DB, categories *service.CategoryS
 	api.Post("/todos", createTodo(todos))
 	api.Get("/todos", listTodos(todos))
 	api.Get("/todos/:id", getTodo(todos))
-	api.Patch("/todos/:id", updateTodo(todos)) 
+	api.Patch("/todos/:id", updateTodo(todos))
 	api.Delete("/todos/:id", deleteTodo(todos))
 	return app
+}
+
+// Fiber expects comma-separated origins; normalize each entry so spaces do not
+// accidentally become part of an origin value.
+func parseAllowedOrigins(value string) string {
+	origins := strings.Split(value, ",")
+	cleaned := make([]string, 0, len(origins))
+	for _, origin := range origins {
+		if origin = strings.TrimSpace(origin); origin != "" {
+			cleaned = append(cleaned, origin)
+		}
+	}
+	if len(cleaned) == 0 {
+		return "*"
+	}
+	return strings.Join(cleaned, ",")
 }
 
 func health(db *gorm.DB) fiber.Handler {

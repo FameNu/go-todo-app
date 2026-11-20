@@ -1,0 +1,11 @@
+.env
+.env.*
+.git
+.DS_Store
+bin/
+coverage/
+tmp/
+*.test
+*.out
+*.prof
+coverage*.txt

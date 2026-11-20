@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/famenu/go-todo-app/api/internal/models"
 	"github.com/joho/godotenv"
@@ -75,10 +76,23 @@ func OpenDatabase(cfg Config) (*gorm.DB, error) {
 		}
 	}
 
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(postgres.New(postgres.Config{
+		DSN:                  dsn,
+		PreferSimpleProtocol: true,
+	}), &gorm.Config{})
 	if err != nil {
 		return nil, fmt.Errorf("open PostgreSQL connection: %w", err)
 	}
+
+	// Keep each API instance within a conservative connection budget for hosted poolers.
+	sqlDB, err := db.DB()
+	if err != nil {
+		return nil, fmt.Errorf("get PostgreSQL connection pool: %w", err)
+	}
+	sqlDB.SetMaxOpenConns(10)
+	sqlDB.SetMaxIdleConns(5)
+	sqlDB.SetConnMaxLifetime(time.Hour)
+
 	if err := db.AutoMigrate(&models.Category{}, &models.Todo{}); err != nil {
 		return nil, fmt.Errorf("migrate database schema: %w", err)
 	}

@@ -27,6 +27,7 @@ func main() {
 	todoService := service.NewTodoService(todoRepo, categoryRepo)
 	app := handler.NewRouter(cfg.AllowedOrigins, db, categoryService, todoService)
 
+	// An empty host binds on all interfaces, as required by Render and Docker.
 	addr := ":" + cfg.Port
 	if err := app.Listen(addr); err != nil {
 		log.Printf("server stopped: %v", err)
