@@ -1,4 +1,4 @@
-.PHONY: db-up db-down run build test-api
+.PHONY: db-up db-down run build test-api web-install web-dev web-build
 
 API_DIR := ./api
 BASE_URL ?= http://localhost:8080
@@ -25,3 +25,12 @@ test-api:
 	curl --fail --show-error -X POST $(BASE_URL)/api/v1/todos -H 'Content-Type: application/json' -d '{"title":"Review appointment notes","category_id":1,"priority":"high"}'
 	@echo '\nList todos:'
 	curl --fail --show-error '$(BASE_URL)/api/v1/todos?status=pending&category_id=1'
+
+web-install:
+	cd ./web && npm ci
+
+web-dev:
+	cd ./web && npm run dev
+
+web-build:
+	cd ./web && npm run build

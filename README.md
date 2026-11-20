@@ -19,6 +19,20 @@ The API listens on `http://localhost:8080`. On startup it connects to PostgreSQL
 
 Stop the local database with `make db-down`; the named volume keeps data between restarts. Run unit tests with `cd api && go test ./...`, build with `make build`, or use `make test-api` against a running server. `BASE_URL` can override the curl target.
 
+## Next.js web app
+
+The responsive clinic dashboard lives in `web/`, uses Tailwind CSS 4 utility classes, and calls the API at `http://localhost:8080` by default. Start the API and PostgreSQL first, then run:
+
+```sh
+cp web/.env.example web/.env.local
+make web-install
+make web-dev
+```
+
+Open `http://localhost:3000`. The dashboard supports category creation, task creation and editing, completion, deletion, and filtering. To point it at another API origin, change `NEXT_PUBLIC_API_URL` in `web/.env.local`. The API must allow that web origin through `ALLOWED_ORIGINS`.
+
+Create a production build with `make web-build` and serve it with `cd web && npm run start`.
+
 ## API
 
 All resources are under `/api/v1`; `/health` is also exposed at the root for hosting platform health checks. JSON errors have an `error` field. Missing resources return 404, invalid inputs return 400, and duplicate category names return 409.
